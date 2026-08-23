@@ -1,1 +1,29 @@
 corpus: benchmarks/data/bench_100k_docs.json docs=100000 (0.1s)
+embedded 6400/100000 (542 docs/s)
+embedded 12800/100000 (531 docs/s)
+embedded 19200/100000 (488 docs/s)
+embedded 25600/100000 (500 docs/s)
+embedded 32000/100000 (507 docs/s)
+embedded 38400/100000 (511 docs/s)
+embedded 44800/100000 (506 docs/s)
+embedded 51200/100000 (489 docs/s)
+embedded 57600/100000 (476 docs/s)
+embedded 64000/100000 (468 docs/s)
+embedded 70400/100000 (461 docs/s)
+embedded 76800/100000 (465 docs/s)
+embedded 83200/100000 (466 docs/s)
+embedded 89600/100000 (470 docs/s)
+embedded 96000/100000 (470 docs/s)
+embedded 100000/100000 (468 docs/s)
+cache stored: benchmarks/data/corpus-embeddings.bin
+swiftvec live | corpus=usemoss/moss benchmarks/bench_100k_docs.json docs=100000 queries=15 rounds=50 warmup=3 top_k=5
+model=mdbr-leaf-ir (quantized onnx, in-process) storage=F32 rerank=false dim=768 m=32 efc=400 embed_threads=4
+build: 362.1s (276 docs/s) | pack: 0.02s | mem: vectors=307.2MB graph=26.0MB
+cold query: 2.78 ms
+reference (moss.dev published, apple m4 pro): p50=3.1ms p95=4.3ms p99=5.4ms (built-in moss-minilm, embedding included)
+   ef    recall search_p50_us search_p99_us     p50_ms     p95_ms     p99_ms    mean_ms
+   32    0.6133           593          1236       3.26       4.37       5.99       3.35
+   64    0.7867           814          1443       3.18       3.91       4.36       3.18
+  128    0.9067          1233          2263       3.65       4.76       5.11       3.70
+  256    0.9600          1772          2703       4.26       5.19       5.60       4.25
+  512    1.0000          2330          4118       4.84       6.22       6.89       4.88

@@ -1,0 +1,10 @@
+swiftvec live | corpus=usemoss/moss benchmarks/bench_100k_docs.json docs=100000 queries=15 rounds=50 warmup=3 top_k=5
+model=mdbr-leaf-ir (quantized onnx, in-process) storage=Int8 rerank=true dim=256 m=32 efc=400 embed_threads=4
+build: 135.3s (739 docs/s) | pack: 0.02s | mem: vectors=128.0MB graph=26.0MB
+cold query: 1.84 ms
+reference (moss.dev published, apple m4 pro): p50=3.1ms p95=4.3ms p99=5.4ms (built-in moss-minilm, embedding included)
+   ef    recall search_p50_us search_p99_us     p50_ms     p95_ms     p99_ms    mean_ms
+   64    0.7067           248           526       1.91       2.67       3.03       2.02
+  128    0.8133           378           616       2.01       2.49       2.97       2.08
+  256    0.9200           582           808       2.22       2.53       2.76       2.26
+  512    0.9600           886          1262       2.54       2.82       3.31       2.57

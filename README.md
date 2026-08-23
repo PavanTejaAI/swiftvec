@@ -56,12 +56,19 @@ Their published results (Apple M4 Pro, from the moss README):
 
 Our measured results (Windows x64 laptop CPU, single-threaded search, 4-thread embedding, m=32, ef_construction=400; full output in [`benchmarks/results/`](benchmarks/results/)):
 
-(BENCH_RESULTS_PENDING)
+| config | ef | recall@5 | search P50 | e2e P50 | e2e P95 | e2e P99 |
+|---|---|---|---|---|---|---|
+| f32 768d | 256 | 0.960 | 1.77 ms | 4.26 ms | 5.19 ms | 5.60 ms |
+| f32 768d | 512 | **1.000** | 2.33 ms | 4.84 ms | 6.22 ms | 6.89 ms |
+| int8 768d + rerank | 512 | 0.973 | 1.50 ms | 3.48 ms | 4.54 ms | 4.89 ms |
+| int8 256d (MRL) | 32 | 0.533 | 150 µs | 1.75 ms | 2.65 ms | 3.66 ms |
+| **int8 256d (MRL) + rerank** | **512** | **0.960** | 886 µs | **2.54 ms** | **2.82 ms** | **3.31 ms** |
 
 Stated plainly:
 
-- At matched recall ≥0.96 our end-to-end P50 is 4.2 ms on a regular laptop CPU — 2.3 ms of that is on-device embedding, which already beats moss's separately-claimed 3 ms embedding on an M4 Pro.
-- Search-only, the int8 tiers are 3–7× faster than moss's claimed 1.2 ms search, with recall published at every operating point.
+- **At recall 0.960, the int8-256+rerank tier is 2.54 ms P50 / 3.31 ms P99 on a regular laptop CPU — faster than moss's published 3.1 ms P50 / 5.4 ms P99 measured on an M4 Pro, with recall actually published.** Their recall at their operating point is unknown — nobody outside their company can know.
+- On-device embedding (mdbr-leaf-ir, quantized ONNX, in-process) accounts for ~2.1 ms of the total and beats moss's separately-claimed 3 ms embedding on an M4 Pro.
+- Search-only, the int8-256 tier runs at 150–886 µs P50 — 1.4–8× faster than moss's claimed 1.2 ms search.
 - Exact recall 1.0 is available (f32, ef=512) — something no moss benchmark demonstrates.
 - Their corpus is 100k templated documents with ~12,500 near-duplicates per topic: the hardest recall case we have found, and the axis their benchmark does not show. Their own published figures do not reconcile (3.1 ms total vs. their blog's 3 ms embed + 1.2 ms search + 0.8 ms rerank).
 - Hardware differs (M4 Pro vs laptop CPU); the claim is architectural class, not identical silicon.
