@@ -1,0 +1,1 @@
+corpus: benchmarks/data/bench_100k_docs.json docs=100000 (0.1s)

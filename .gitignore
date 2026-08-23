@@ -1,0 +1,10 @@
+/target
+/dist
+.venv/
+__pycache__/
+benchmarks/data/
+models/
+vendor/
+datasets/
+*.profraw
+*.swiftvec

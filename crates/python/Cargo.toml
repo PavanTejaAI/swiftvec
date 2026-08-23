@@ -1,0 +1,16 @@
+[package]
+name = "swiftvec-python"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+name = "swiftvec"
+crate-type = ["cdylib"]
+
+[dependencies]
+swiftvec-core = { path = "../core" }
+swiftvec-embed = { path = "../embed" }
+pyo3 = { version = "0.23", features = ["extension-module", "abi3-py39"] }
+serde_json = "1"
