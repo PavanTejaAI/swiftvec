@@ -1,4 +1,4 @@
-use pyo3::exceptions::PyRuntimeError;
+use pyo3::exceptions::{PyKeyError, PyRuntimeError};
 use pyo3::prelude::*;
 use pyo3::ToPyObject;
 use std::io::Cursor;
@@ -85,12 +85,207 @@ fn json_to_py(py: Python<'_>, v: &serde_json::Value) -> PyObject {
     }
 }
 
+#[derive(Clone, Copy, PartialEq)]
+enum Cmp {
+    Eq,
+    Ne,
+    Gt,
+    Gte,
+    Lt,
+    Lte,
+    In,
+    Nin,
+    Exists,
+}
+
+fn parse_cmp(s: &str) -> Option<Cmp> {
+    match s {
+        "$eq" => Some(Cmp::Eq),
+        "$ne" => Some(Cmp::Ne),
+        "$gt" => Some(Cmp::Gt),
+        "$gte" => Some(Cmp::Gte),
+        "$lt" => Some(Cmp::Lt),
+        "$lte" => Some(Cmp::Lte),
+        "$in" => Some(Cmp::In),
+        "$nin" => Some(Cmp::Nin),
+        "$exists" => Some(Cmp::Exists),
+        _ => None,
+    }
+}
+
+enum Filter {
+    And(Vec<Filter>),
+    Or(Vec<Filter>),
+    Nor(Vec<Filter>),
+    Cond {
+        key: String,
+        ops: Vec<(Cmp, serde_json::Value)>,
+    },
+}
+
+fn compile_cond(key: String, cond: &serde_json::Value) -> PyResult<Filter> {
+    match cond {
+        serde_json::Value::Object(m) if m.keys().all(|k| k.starts_with('$')) => {
+            if m.is_empty() {
+                return Err(PyRuntimeError::new_err(format!(
+                    "condition for '{key}' is empty"
+                )));
+            }
+            let mut ops = Vec::with_capacity(m.len());
+            for (op, val) in m {
+                let c = parse_cmp(op).ok_or_else(|| {
+                    PyRuntimeError::new_err(format!(
+                        "unknown operator '{op}' in condition for '{key}' (supported: $eq $ne $gt $gte $lt $lte $in $nin $exists)"
+                    ))
+                })?;
+                match c {
+                    Cmp::In | Cmp::Nin => {
+                        if !val.is_array() {
+                            return Err(PyRuntimeError::new_err(format!(
+                                "'{op}' for '{key}' expects an array"
+                            )));
+                        }
+                    }
+                    Cmp::Exists => {
+                        if !val.is_boolean() {
+                            return Err(PyRuntimeError::new_err(format!(
+                                "'{op}' for '{key}' expects a boolean"
+                            )));
+                        }
+                    }
+                    _ => {}
+                }
+                ops.push((c, val.clone()));
+            }
+            Ok(Filter::Cond { key, ops })
+        }
+        serde_json::Value::Object(_) => Err(PyRuntimeError::new_err(format!(
+            "condition for '{key}' must contain only '$' operators"
+        ))),
+        v => Ok(Filter::Cond {
+            key,
+            ops: vec![(Cmp::Eq, v.clone())],
+        }),
+    }
+}
+
+fn compile_filter(v: &serde_json::Value) -> PyResult<Filter> {
+    let obj = v.as_object().ok_or_else(|| {
+        PyRuntimeError::new_err("filter must be a dict, e.g. {'topic': {'$in': ['ir', 'rag']}}")
+    })?;
+    let mut parts: Vec<Filter> = Vec::new();
+    for (k, val) in obj {
+        match k.as_str() {
+            "$and" | "$or" | "$nor" => {
+                let arr = val.as_array().ok_or_else(|| {
+                    PyRuntimeError::new_err(format!("'{k}' expects an array of dicts"))
+                })?;
+                if arr.is_empty() {
+                    return Err(PyRuntimeError::new_err(format!(
+                        "'{k}' expects a non-empty array"
+                    )));
+                }
+                let mut sub = Vec::with_capacity(arr.len());
+                for e in arr {
+                    sub.push(compile_filter(e)?);
+                }
+                parts.push(match k.as_str() {
+                    "$and" => Filter::And(sub),
+                    "$or" => Filter::Or(sub),
+                    _ => Filter::Nor(sub),
+                });
+            }
+            s if s.starts_with('$') => {
+                return Err(PyRuntimeError::new_err(format!(
+                    "unsupported top-level operator '{s}' (supported: $and $or $nor)"
+                )))
+            }
+            key => parts.push(compile_cond(key.to_string(), val)?),
+        }
+    }
+    if parts.len() == 1 {
+        return Ok(parts.into_iter().next().unwrap());
+    }
+    Ok(Filter::And(parts))
+}
+
+fn as_num(v: &serde_json::Value) -> Option<f64> {
+    v.as_number().and_then(|n| n.as_f64())
+}
+
+impl Filter {
+    fn matches(&self, meta: &serde_json::Value) -> bool {
+        match self {
+            Filter::And(fs) => fs.iter().all(|f| f.matches(meta)),
+            Filter::Or(fs) => fs.iter().any(|f| f.matches(meta)),
+            Filter::Nor(fs) => !fs.iter().any(|f| f.matches(meta)),
+            Filter::Cond { key, ops } => ops
+                .iter()
+                .all(|(c, t)| apply_cmp(*c, t, meta.get(key.as_str()))),
+        }
+    }
+}
+
+
+fn scalar_eq(a: &serde_json::Value, b: &serde_json::Value) -> bool {
+    if let (Some(x), Some(y)) = (as_num(a), as_num(b)) {
+        return x == y;
+    }
+    a == b
+}
+
+fn field_eq(field: &serde_json::Value, target: &serde_json::Value) -> bool {
+    match field {
+        serde_json::Value::Array(items) => items.iter().any(|e| scalar_eq(e, target)),
+        _ => scalar_eq(field, target),
+    }
+}
+
+fn apply_cmp(c: Cmp, target: &serde_json::Value, field: Option<&serde_json::Value>) -> bool {
+    match c {
+        Cmp::Eq => field.map_or(false, |f| field_eq(f, target)),
+        Cmp::Ne => field.map_or(true, |f| !field_eq(f, target)),
+        Cmp::Gt | Cmp::Gte | Cmp::Lt | Cmp::Lte => {
+            let Some(f) = field else { return false };
+            let ord = match (as_num(f), as_num(target)) {
+                (Some(x), Some(y)) => x.partial_cmp(&y),
+                _ => {
+                    let (Some(xs), Some(ys)) = (f.as_str(), target.as_str()) else {
+                        return false;
+                    };
+                    Some(xs.cmp(ys))
+                }
+            };
+            match (c, ord) {
+                (_, None) => false,
+                (Cmp::Gt, Some(o)) => o.is_gt(),
+                (Cmp::Gte, Some(o)) => o.is_ge(),
+                (Cmp::Lt, Some(o)) => o.is_lt(),
+                (Cmp::Lte, Some(o)) => o.is_le(),
+                _ => false,
+            }
+        }
+        Cmp::In => field.map_or(false, |f| match target {
+            serde_json::Value::Array(items) => items.iter().any(|t| field_eq(f, t)),
+            t => field_eq(f, t),
+        }),
+        Cmp::Nin => field.map_or(true, |f| match target {
+            serde_json::Value::Array(items) => !items.iter().any(|t| field_eq(f, t)),
+            t => !field_eq(f, t),
+        }),
+        Cmp::Exists => field.is_some() == target.as_bool().unwrap_or(false),
+    }
+}
+
+
 #[pyclass]
 struct SearchResult {
     #[pyo3(get)]
     id: String,
     #[pyo3(get)]
     score: f32,
+    #[pyo3(get)]
+    text: String,
     #[pyo3(get)]
     metadata: PyObject,
 }
@@ -216,7 +411,7 @@ impl SwiftVec {
         self.add_batch(py, vec![id], vec![text], metadata.map(|m| vec![Some(m)]))
     }
 
-    #[pyo3(signature = (query, top_k=5, ef=None, alpha=None))]
+    #[pyo3(signature = (query, top_k=5, ef=None, alpha=None, filter=None))]
     fn search(
         &mut self,
         py: Python<'_>,
@@ -224,6 +419,7 @@ impl SwiftVec {
         top_k: usize,
         ef: Option<usize>,
         alpha: Option<f32>,
+        filter: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<Vec<SearchResult>> {
         if self.index.is_none() {
             return Err(PyRuntimeError::new_err(
@@ -236,6 +432,17 @@ impl SwiftVec {
                 self.ids.len()
             )));
         }
+        let flt = match filter {
+            None => None,
+            Some(f) => {
+                if f.is_none() {
+                    None
+                } else {
+                    let jv = json_from_py(f)?;
+                    Some(compile_filter(&jv)?)
+                }
+            }
+        };
         let opts = self.opts();
         let mut embedder = self.embedder.lock().unwrap();
         let emb: &mut Embedder = &mut embedder;
@@ -250,18 +457,27 @@ impl SwiftVec {
             ids,
             bm25,
             metas,
+            texts,
             ..
         } = self;
         let index = index.as_ref().unwrap();
         match alpha {
             None => {
                 let ef = ef.unwrap_or(top_k * 8).max(top_k);
-                let hits = py.allow_threads(|| index.search_with(ctx, &qv, top_k, ef, None));
+                let hits = match &flt {
+                    None => py.allow_threads(|| index.search_with(ctx, &qv, top_k, ef, None)),
+                    Some(pred) => {
+                        let pass =
+                            |id: u32| pred.matches(&metas[id as usize]);
+                        py.allow_threads(|| index.search_with(ctx, &qv, top_k, ef, Some(&pass)))
+                    }
+                };
                 Ok(hits
                     .into_iter()
                     .map(|h| SearchResult {
                         id: ids[h.id as usize].clone(),
                         score: 1.0 - h.dist,
+                        text: texts[h.id as usize].clone(),
                         metadata: json_to_py(py, &metas[h.id as usize]),
                     })
                     .collect())
@@ -270,20 +486,43 @@ impl SwiftVec {
                 if !(0.0..=1.0).contains(&a) {
                     return Err(PyRuntimeError::new_err("alpha must be in [0, 1]"));
                 }
-                let fetch = (top_k * 4).max(16).min(ids.len());
+                let base = (top_k * 4).max(16);
+                let fetch = if flt.is_some() {
+                    (base * 4).min(ids.len())
+                } else {
+                    base.min(ids.len())
+                };
                 let ef = ef.unwrap_or(fetch * 2).max(fetch);
-                let hits = py.allow_threads(|| index.search_with(ctx, &qv, fetch, ef, None));
-                let kw = bm25.search(query, fetch);
-                let fused = rrf_fuse(&hits, &kw, top_k, a, 1.0 - a);
+                let mut vhits = py.allow_threads(|| index.search_with(ctx, &qv, fetch, ef, None));
+                let mut kw = bm25.search(query, fetch);
+                if let Some(pred) = &flt {
+                    vhits.retain(|h| pred.matches(&metas[h.id as usize]));
+                    kw.retain(|(_, id)| pred.matches(&metas[*id as usize]));
+                }
+                let fused = rrf_fuse(&vhits, &kw, top_k, a, 1.0 - a);
                 Ok(fused
                     .into_iter()
                     .map(|(id, score)| SearchResult {
                         id: ids[id as usize].clone(),
                         score,
+                        text: texts[id as usize].clone(),
                         metadata: json_to_py(py, &metas[id as usize]),
                     })
                     .collect())
             }
+        }
+    }
+
+    fn get(&self, py: Python<'_>, id: String) -> PyResult<PyObject> {
+        match self.ids.iter().position(|x| x == &id) {
+            Some(i) => {
+                let d = pyo3::types::PyDict::new(py);
+                d.set_item("id", &self.ids[i])?;
+                d.set_item("text", &self.texts[i])?;
+                d.set_item("metadata", json_to_py(py, &self.metas[i]))?;
+                Ok(d.into_any().unbind())
+            }
+            None => Err(PyKeyError::new_err(format!("id '{}' not found", id))),
         }
     }
 
@@ -353,6 +592,14 @@ impl SwiftVec {
         d.set_item("dim", self.dim).unwrap();
         d.set_item("model_dir", self.model.to_str().unwrap_or("")).unwrap();
         d.set_item("hybrid", true).unwrap();
+        d.set_item(
+            "filter_ops",
+            [
+                "$eq", "$ne", "$gt", "$gte", "$lt", "$lte", "$in", "$nin", "$exists", "$and",
+                "$or", "$nor",
+            ],
+        )
+        .unwrap();
         d.into_any().unbind()
     }
 
@@ -383,7 +630,7 @@ impl SwiftVec {
 }
 
 #[pymodule]
-fn swiftvec(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn _native(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<SwiftVec>()?;
     m.add_class::<SearchResult>()?;
     Ok(())

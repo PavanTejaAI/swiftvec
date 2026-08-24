@@ -7,3 +7,10 @@ authors.workspace = true
 
 [lib]
 name = "swiftvec_core"
+
+[features]
+default = []
+mmap = ["dep:memmap2"]
+
+[dependencies]
+memmap2 = { version = "0.9", optional = true }

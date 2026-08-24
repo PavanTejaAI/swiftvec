@@ -82,6 +82,8 @@ struct BenchArgs {
     data: DataArg,
     #[arg(long)]
     rerank: bool,
+    #[arg(long)]
+    cascade: bool,
 }
 
 #[derive(clap::Args)]
@@ -132,6 +134,8 @@ struct LiveArgs {
     rerank: bool,
     #[arg(long)]
     rebuild: bool,
+    #[arg(long)]
+    cascade: bool,
 }
 
 fn pct_f(sorted: &[f64], p: f64) -> f64 {
@@ -289,6 +293,9 @@ fn live(a: LiveArgs) {
     let mut cfg = HnswConfig::new(dim, Metric::Dot);
     cfg.m = a.m;
     cfg.ef_construction = a.ef_construction;
+    if a.cascade {
+        cfg.cascade = true;
+    }
     let storage = match a.storage {
         StorageArg::F32 => Storage::F32,
         StorageArg::Int8 => Storage::Int8,
@@ -343,8 +350,8 @@ fn live(a: LiveArgs) {
         MOSS_QUERIES.len(), a.rounds, a.warmup, a.k
     );
     println!(
-        "model=mdbr-leaf-ir (quantized onnx, in-process) storage={storage:?} rerank={rerank_on} dim={dim} m={} efc={} embed_threads={}",
-        a.m, a.ef_construction, a.embed_threads
+        "model=mdbr-leaf-ir (quantized onnx, in-process) storage={storage:?} rerank={rerank_on} cascade={} dim={dim} m={} efc={} embed_threads={}",
+        a.cascade, a.m, a.ef_construction, a.embed_threads
     );
     println!(
         "build: {:.1}s ({:.0} docs/s) | pack: {:.2}s | mem: vectors={:.1}MB graph={:.1}MB",
@@ -419,6 +426,9 @@ fn bench(a: BenchArgs) {
         StorageArg::Int8 => Storage::Int8,
     };
     cfg.storage = storage;
+    if a.cascade {
+        cfg.cascade = true;
+    }
     let qrange = match (a.qrange, storage) {
         (Some(r), Storage::Int8) => r,
         (None, Storage::Int8) => calibrate_range(&ds.vectors),
@@ -444,7 +454,7 @@ fn bench(a: BenchArgs) {
     let vmb = ix.vector_bytes() as f64 / 1e6;
     let gmb = ix.link_count() as f64 * 4.0 / 1e6;
     println!(
-        "swiftvec bench | data={:?}-synthetic n={} dim={} clusters={} metric={} m={} efc={} storage={:?} qrange={:.3} filter={:?} seed={}",
+        "swiftvec bench | data={:?}-synthetic n={} dim={} clusters={} metric={} m={} efc={} storage={:?} qrange={:.3} filter={:?} cascade={} seed={}",
         a.data,
         a.n,
         a.dim,
@@ -455,6 +465,7 @@ fn bench(a: BenchArgs) {
         storage,
         qrange,
         a.filter,
+        a.cascade,
         a.seed
     );
     println!(

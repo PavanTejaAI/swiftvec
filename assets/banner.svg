@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="400" viewBox="0 0 1280 400" role="img" aria-label="swiftvec - fully on-device vector search engine">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#060910"/>
+      <stop offset="0.5" stop-color="#0B1322"/>
+      <stop offset="1" stop-color="#101B31"/>
+    </linearGradient>
+    <radialGradient id="glowBlue" cx="0.78" cy="0.30" r="0.52">
+      <stop offset="0" stop-color="#2563EB" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#2563EB" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowTeal" cx="0.14" cy="0.88" r="0.55">
+      <stop offset="0" stop-color="#0D9488" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#0D9488" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#22D3EE"/>
+      <stop offset="1" stop-color="#34D399"/>
+    </linearGradient>
+    <linearGradient id="pathGrad" gradientUnits="userSpaceOnUse" x1="826" y1="92" x2="968" y2="306">
+      <stop offset="0" stop-color="#22D3EE"/>
+      <stop offset="1" stop-color="#34D399"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.07"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid" width="26" height="26" patternUnits="userSpaceOnUse">
+      <circle cx="1.5" cy="1.5" r="1" fill="#64748B" fill-opacity="0.13"/>
+    </pattern>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="400" rx="20" fill="url(#bg)"/>
+  <rect width="1280" height="400" rx="20" fill="url(#grid)"/>
+  <rect width="1280" height="400" rx="20" fill="url(#glowBlue)"/>
+  <rect width="1280" height="400" rx="20" fill="url(#glowTeal)"/>
+
+  <g stroke="#334155" stroke-width="1.3" stroke-opacity="0.8">
+    <line x1="826" y1="92" x2="946" y2="92"/>
+    <line x1="946" y1="92" x2="1078" y2="92"/>
+    <line x1="774" y1="198" x2="862" y2="198"/>
+    <line x1="862" y1="198" x2="958" y2="198"/>
+    <line x1="958" y1="198" x2="1052" y2="198"/>
+    <line x1="1052" y1="198" x2="1136" y2="198"/>
+    <line x1="742" y1="306" x2="816" y2="306"/>
+    <line x1="816" y1="306" x2="892" y2="306"/>
+    <line x1="892" y1="306" x2="968" y2="306"/>
+    <line x1="968" y1="306" x2="1044" y2="306"/>
+    <line x1="1044" y1="306" x2="1118" y2="306"/>
+    <line x1="1118" y1="306" x2="1186" y2="306"/>
+  </g>
+
+  <g stroke="#334155" stroke-width="1.2" stroke-opacity="0.5">
+    <line x1="826" y1="92" x2="862" y2="198"/>
+    <line x1="946" y1="92" x2="958" y2="198"/>
+    <line x1="1078" y1="92" x2="1052" y2="198"/>
+    <line x1="1078" y1="92" x2="1136" y2="198"/>
+    <line x1="774" y1="198" x2="742" y2="306"/>
+    <line x1="862" y1="198" x2="816" y2="306"/>
+    <line x1="862" y1="198" x2="892" y2="306"/>
+    <line x1="958" y1="198" x2="968" y2="306"/>
+    <line x1="958" y1="198" x2="1044" y2="306"/>
+    <line x1="1052" y1="198" x2="1044" y2="306"/>
+    <line x1="1136" y1="198" x2="1118" y2="306"/>
+  </g>
+
+  <path d="M 826 92 L 862 198 L 968 306" fill="none" stroke="url(#pathGrad)" stroke-width="3.5" stroke-linecap="round" filter="url(#glow)"/>
+
+  <g fill="#101B31" stroke="#475569" stroke-width="1.6">
+    <circle cx="826" cy="92" r="7"/>
+    <circle cx="946" cy="92" r="7"/>
+    <circle cx="1078" cy="92" r="7"/>
+    <circle cx="774" cy="198" r="6.5"/>
+    <circle cx="862" cy="198" r="6.5"/>
+    <circle cx="958" cy="198" r="6.5"/>
+    <circle cx="1052" cy="198" r="6.5"/>
+    <circle cx="1136" cy="198" r="6.5"/>
+    <circle cx="742" cy="306" r="6"/>
+    <circle cx="816" cy="306" r="6"/>
+    <circle cx="892" cy="306" r="6"/>
+    <circle cx="968" cy="306" r="6"/>
+    <circle cx="1044" cy="306" r="6"/>
+    <circle cx="1118" cy="306" r="6"/>
+    <circle cx="1186" cy="306" r="6"/>
+  </g>
+
+  <circle cx="826" cy="92" r="5" fill="#22D3EE" filter="url(#glow)"/>
+  <circle cx="862" cy="198" r="5" fill="#2DD4BF" filter="url(#glow)"/>
+  <circle cx="968" cy="306" r="5.5" fill="#34D399" filter="url(#glow)"/>
+  <circle cx="968" cy="306" r="15" fill="none" stroke="#34D399" stroke-opacity="0.35" stroke-width="1.5" stroke-dasharray="3 5"/>
+
+  <g font-family="'Cascadia Code', Consolas, 'SF Mono', Menlo, monospace" font-size="12" letter-spacing="2" fill="#475569">
+    <text x="1252" y="96" text-anchor="end">L2</text>
+    <text x="1252" y="202" text-anchor="end">L1</text>
+    <text x="1252" y="310" text-anchor="end">L0</text>
+  </g>
+
+  <g>
+    <rect x="84" y="58" width="344" height="34" rx="17" fill="#0E1729" stroke="#29405F" stroke-opacity="0.9"/>
+    <circle cx="103" cy="75" r="4" fill="url(#accent)"/>
+    <text x="118" y="80" font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="13" font-weight="600" letter-spacing="2.5" fill="#7DD3FC">FULLY ON-DEVICE VECTOR SEARCH</text>
+  </g>
+
+  <text x="80" y="212" font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="100" font-weight="800" letter-spacing="-3" fill="#F8FAFC">swift<tspan fill="url(#accent)">vec</tspan></text>
+
+  <rect x="84" y="236" width="136" height="5" rx="2.5" fill="url(#accent)" opacity="0.95"/>
+
+  <text x="84" y="282" font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="21" font-weight="600" fill="#CBD5E1">Embed &#183; Index &#183; Search &#8212; entirely on your machine.</text>
+  <text x="84" y="311" font-family="'Cascadia Code', Consolas, 'SF Mono', Menlo, monospace" font-size="13" letter-spacing="3" fill="#64748B">NO CLOUD &#183; NO SERVER &#183; NO ACCOUNT</text>
+
+  <g font-family="'Cascadia Code', Consolas, 'SF Mono', Menlo, monospace" font-size="11.5" letter-spacing="1.5" fill="#94A3B8" text-anchor="middle">
+    <rect x="84" y="334" width="152" height="30" rx="15" fill="#16233B" fill-opacity="0.8" stroke="#334155" stroke-opacity="0.9"/>
+    <text x="160" y="353">HNSW ENGINE</text>
+    <rect x="250" y="334" width="166" height="30" rx="15" fill="#16233B" fill-opacity="0.8" stroke="#334155" stroke-opacity="0.9"/>
+    <text x="333" y="353">INT8 + RERANK</text>
+    <rect x="430" y="334" width="196" height="30" rx="15" fill="#16233B" fill-opacity="0.8" stroke="#334155" stroke-opacity="0.9"/>
+    <text x="528" y="353">BM25 + RRF HYBRID</text>
+  </g>
+
+  <rect x="1" y="1" width="1278" height="398" rx="19" fill="none" stroke="#7C8DA6" stroke-opacity="0.22" stroke-width="1.5"/>
+  <rect x="1.5" y="1.5" width="1277" height="110" rx="19" fill="url(#sheen)"/>
+</svg>

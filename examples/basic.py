@@ -33,9 +33,17 @@ results = loaded.search("how does fast similarity search work", top_k=3)
 elapsed = (time.perf_counter() - t0) * 1000
 print(f"semantic search in {elapsed:.2f}ms (embed + search, fully on-device)")
 for r in results:
-    print(f"  {r.id}  {r.score:.4f}  {r.metadata}")
+    print(f"  {r.id}  {r.score:.4f}  {r.text[:40]}...  {r.metadata}")
 
 hybrid = loaded.search("exact keyword match: qubits", top_k=3, alpha=0.4)
 print("hybrid search (alpha=0.4):")
 for r in hybrid:
     print(f"  {r.id}  {r.score:.4f}  {r.metadata}")
+
+filtered = loaded.search("similarity search", top_k=3, filter={"topic": "retrieval"})
+print("filtered search (topic=retrieval):")
+for r in filtered:
+    print(f"  {r.id}  {r.score:.4f}  {r.metadata}")
+
+doc = loaded.get("quantum-1")
+print(f"get('quantum-1') -> {doc['text']!r}")

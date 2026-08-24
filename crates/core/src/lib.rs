@@ -13,6 +13,8 @@ pub use brute::top_k;
 pub use dataset::{clustered, uniform, Dataset};
 pub use distance::{dot, l2sq, Metric};
 pub use hit::Hit;
+#[cfg(feature = "mmap")]
+pub use hnsw::{MappedIndex, Mapping};
 pub use hnsw::{Hnsw, HnswConfig, Query, Storage};
 pub use int8::{calibrate_range, dot_i8, l2sq_i8, quantize_into};
 pub use rng::Xoshiro256;

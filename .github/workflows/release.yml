@@ -1,0 +1,120 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions: {}
+
+env:
+  ORT_VERSION: "1.23.0"
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - target: x86_64
+            ort_asset: onnxruntime-linux-x64-${{ env.ORT_VERSION }}.tgz
+            ort_dir: onnxruntime-linux-x64-${{ env.ORT_VERSION }}
+            ort_lib: libonnxruntime.so
+          - target: aarch64
+            ort_asset: onnxruntime-linux-aarch64-${{ env.ORT_VERSION }}.tgz
+            ort_dir: onnxruntime-linux-aarch64-${{ env.ORT_VERSION }}
+            ort_lib: libonnxruntime.so
+    steps:
+      - uses: actions/checkout@v4
+      - name: bundle onnxruntime
+        shell: bash
+        run: |
+          set -e
+          mkdir -p crates/python/python/swiftvec/libs tmp
+          curl -fSL "https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/${{ matrix.ort_asset }}" -o tmp/ort.pkg
+          tar -xf tmp/ort.pkg -C tmp
+          cp "tmp/${{ matrix.ort_dir }}/lib/${{ matrix.ort_lib }}" crates/python/python/swiftvec/libs/
+          cp "tmp/${{ matrix.ort_dir }}/LICENSE" crates/python/python/swiftvec/libs/LICENSE-onnxruntime.txt
+      - uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          manylinux: auto
+          command: build
+          args: --release --out dist -m crates/python/Cargo.toml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-${{ matrix.target }}
+          path: dist/*
+
+  macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        include:
+          - target: x86_64
+            ort_asset: onnxruntime-osx-x86_64-${{ env.ORT_VERSION }}.tgz
+            ort_dir: onnxruntime-osx-x86_64-${{ env.ORT_VERSION }}
+            ort_lib: libonnxruntime.dylib
+          - target: aarch64
+            ort_asset: onnxruntime-osx-arm64-${{ env.ORT_VERSION }}.tgz
+            ort_dir: onnxruntime-osx-arm64-${{ env.ORT_VERSION }}
+            ort_lib: libonnxruntime.dylib
+    steps:
+      - uses: actions/checkout@v4
+      - name: bundle onnxruntime
+        shell: bash
+        run: |
+          set -e
+          mkdir -p crates/python/python/swiftvec/libs tmp
+          curl -fSL "https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/${{ matrix.ort_asset }}" -o tmp/ort.pkg
+          tar -xf tmp/ort.pkg -C tmp
+          cp "tmp/${{ matrix.ort_dir }}/lib/${{ matrix.ort_lib }}" crates/python/python/swiftvec/libs/
+          cp "tmp/${{ matrix.ort_dir }}/LICENSE" crates/python/python/swiftvec/libs/LICENSE-onnxruntime.txt
+      - uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          command: build
+          args: --release --out dist -m crates/python/Cargo.toml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.target }}
+          path: dist/*
+
+  windows:
+    runs-on: windows-latest
+    env:
+      ort_asset: onnxruntime-win-x64-1.23.0.zip
+      ort_dir: onnxruntime-win-x64-1.23.0
+      ort_lib: onnxruntime.dll
+    steps:
+      - uses: actions/checkout@v4
+      - name: bundle onnxruntime
+        shell: bash
+        run: |
+          set -e
+          mkdir -p crates/python/python/swiftvec/libs tmp
+          curl -fSL "https://github.com/microsoft/onnxruntime/releases/download/v1.23.0/onnxruntime-win-x64-1.23.0.zip" -o tmp/ort.pkg
+          tar -xf tmp/ort.pkg -C tmp
+          cp "tmp/onnxruntime-win-x64-1.23.0/lib/onnxruntime.dll" crates/python/python/swiftvec/libs/
+          cp "tmp/onnxruntime-win-x64-1.23.0/LICENSE" crates/python/python/swiftvec/libs/LICENSE-onnxruntime.txt
+      - uses: PyO3/maturin-action@v1
+        with:
+          command: build
+          args: --release --out dist -m crates/python/Cargo.toml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/*
+
+  publish:
+    needs: [linux, macos, windows]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: publish to pypi
+        uses: pypa/gh-action-pypi-publish@release/v1

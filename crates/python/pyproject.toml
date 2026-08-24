@@ -1,10 +1,10 @@
-[build-system]
+﻿[build-system]
 requires = ["maturin>=1.7,<2"]
 build-backend = "maturin"
 
 [project]
 name = "swiftvec"
-version = "0.1.0"
+version = "0.3.0"
 description = "Fully on-device vector search engine with built-in embeddings - no cloud, no server, no account"
 authors = [{ name = "Pavan Teja" }]
 license = { text = "MIT" }
@@ -26,8 +26,13 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/pavanteja/swiftvec"
-Repository = "https://github.com/pavanteja/swiftvec"
+Homepage = "https://github.com/PavanTejaAI/swiftvec"
+Repository = "https://github.com/PavanTejaAI/swiftvec"
+Documentation = "https://github.com/PavanTejaAI/swiftvec/tree/main/docs"
+Issues = "https://github.com/PavanTejaAI/swiftvec/issues"
 
 [tool.maturin]
+python-source = "python"
+module-name = "swiftvec._native"
 features = ["pyo3/extension-module"]
+include = [{ path = "python/swiftvec/libs/*", format = ["wheel"] }]

@@ -8,3 +8,4 @@ vendor/
 datasets/
 *.profraw
 *.swiftvec
+crates/python/python/swiftvec/libs/
