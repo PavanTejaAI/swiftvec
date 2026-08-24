@@ -36,3 +36,4 @@ python-source = "python"
 module-name = "swiftvec._native"
 features = ["pyo3/extension-module"]
 include = [{ path = "python/swiftvec/libs/*", format = ["wheel"] }]
+exclude = [{ path = "**/__pycache__/**", format = ["wheel", "sdist"] }]
