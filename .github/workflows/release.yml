@@ -6,9 +6,6 @@ on:
 
 permissions: {}
 
-env:
-  ORT_VERSION: "1.23.0"
-
 jobs:
   linux:
     runs-on: ubuntu-latest
@@ -16,12 +13,12 @@ jobs:
       matrix:
         include:
           - target: x86_64
-            ort_asset: onnxruntime-linux-x64-${{ env.ORT_VERSION }}.tgz
-            ort_dir: onnxruntime-linux-x64-${{ env.ORT_VERSION }}
+            ort_asset: onnxruntime-linux-x64-1.23.0.tgz
+            ort_dir: onnxruntime-linux-x64-1.23.0
             ort_lib: libonnxruntime.so
           - target: aarch64
-            ort_asset: onnxruntime-linux-aarch64-${{ env.ORT_VERSION }}.tgz
-            ort_dir: onnxruntime-linux-aarch64-${{ env.ORT_VERSION }}
+            ort_asset: onnxruntime-linux-aarch64-1.23.0.tgz
+            ort_dir: onnxruntime-linux-aarch64-1.23.0
             ort_lib: libonnxruntime.so
     steps:
       - uses: actions/checkout@v4
@@ -30,7 +27,7 @@ jobs:
         run: |
           set -e
           mkdir -p crates/python/python/swiftvec/libs tmp
-          curl -fSL "https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/${{ matrix.ort_asset }}" -o tmp/ort.pkg
+          curl -fSL "https://github.com/microsoft/onnxruntime/releases/download/v1.23.0/${{ matrix.ort_asset }}" -o tmp/ort.pkg
           tar -xf tmp/ort.pkg -C tmp
           cp "tmp/${{ matrix.ort_dir }}/lib/${{ matrix.ort_lib }}" crates/python/python/swiftvec/libs/
           cp "tmp/${{ matrix.ort_dir }}/LICENSE" crates/python/python/swiftvec/libs/LICENSE-onnxruntime.txt
@@ -51,12 +48,12 @@ jobs:
       matrix:
         include:
           - target: x86_64
-            ort_asset: onnxruntime-osx-x86_64-${{ env.ORT_VERSION }}.tgz
-            ort_dir: onnxruntime-osx-x86_64-${{ env.ORT_VERSION }}
+            ort_asset: onnxruntime-osx-x86_64-1.23.0.tgz
+            ort_dir: onnxruntime-osx-x86_64-1.23.0
             ort_lib: libonnxruntime.dylib
           - target: aarch64
-            ort_asset: onnxruntime-osx-arm64-${{ env.ORT_VERSION }}.tgz
-            ort_dir: onnxruntime-osx-arm64-${{ env.ORT_VERSION }}
+            ort_asset: onnxruntime-osx-arm64-1.23.0.tgz
+            ort_dir: onnxruntime-osx-arm64-1.23.0
             ort_lib: libonnxruntime.dylib
     steps:
       - uses: actions/checkout@v4
@@ -65,7 +62,7 @@ jobs:
         run: |
           set -e
           mkdir -p crates/python/python/swiftvec/libs tmp
-          curl -fSL "https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/${{ matrix.ort_asset }}" -o tmp/ort.pkg
+          curl -fSL "https://github.com/microsoft/onnxruntime/releases/download/v1.23.0/${{ matrix.ort_asset }}" -o tmp/ort.pkg
           tar -xf tmp/ort.pkg -C tmp
           cp "tmp/${{ matrix.ort_dir }}/lib/${{ matrix.ort_lib }}" crates/python/python/swiftvec/libs/
           cp "tmp/${{ matrix.ort_dir }}/LICENSE" crates/python/python/swiftvec/libs/LICENSE-onnxruntime.txt
@@ -81,10 +78,6 @@ jobs:
 
   windows:
     runs-on: windows-latest
-    env:
-      ort_asset: onnxruntime-win-x64-1.23.0.zip
-      ort_dir: onnxruntime-win-x64-1.23.0
-      ort_lib: onnxruntime.dll
     steps:
       - uses: actions/checkout@v4
       - name: bundle onnxruntime
