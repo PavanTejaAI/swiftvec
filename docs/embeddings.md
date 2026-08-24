@@ -1,4 +1,4 @@
-﻿# Embeddings
+# Embeddings
 
 swiftvec embeds text entirely on your machine. There is no API call anywhere in the pipeline.
 

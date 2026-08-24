@@ -1,4 +1,4 @@
-﻿# swiftvec
+# swiftvec
 
 Fully on-device vector search: embeddings, HNSW index, BM25 keyword search, hybrid fusion, metadata filters, and single-file persistence, all in your process. No cloud. No server. No account.
 

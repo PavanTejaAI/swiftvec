@@ -1,4 +1,4 @@
-﻿# Engine internals
+# Engine internals
 
 `swiftvec-core` implements the entire retrieval engine with zero runtime dependencies. This document explains how each layer works and why it is shaped the way it is.
 

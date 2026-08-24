@@ -1,4 +1,4 @@
-﻿# Benchmarks
+# Benchmarks
 
 ## Our results
 

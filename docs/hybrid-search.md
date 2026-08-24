@@ -1,4 +1,4 @@
-﻿# Hybrid search
+# Hybrid search
 
 `db.search(..., alpha=a)` runs both retrievers and fuses their rankings in one call.
 

@@ -1,4 +1,4 @@
-﻿<p align="center">
+<p align="center">
   <img src="assets/banner.svg" alt="swiftvec, fully on-device vector search engine" width="100%">
 </p>
 

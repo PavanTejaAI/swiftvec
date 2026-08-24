@@ -1,4 +1,4 @@
-﻿# Python SDK reference
+# Python SDK reference
 
 Package: `swiftvec` (PyPI). Module exposes two classes: `SwiftVec` and `SearchResult`.
 

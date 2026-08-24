@@ -81,14 +81,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: bundle onnxruntime
-        shell: bash
+        shell: pwsh
         run: |
-          set -e
-          mkdir -p crates/python/python/swiftvec/libs tmp
-          curl -fSL "https://github.com/microsoft/onnxruntime/releases/download/v1.23.0/onnxruntime-win-x64-1.23.0.zip" -o tmp/ort.pkg
-          tar -xf tmp/ort.pkg -C tmp
-          cp "tmp/onnxruntime-win-x64-1.23.0/lib/onnxruntime.dll" crates/python/python/swiftvec/libs/
-          cp "tmp/onnxruntime-win-x64-1.23.0/LICENSE" crates/python/python/swiftvec/libs/LICENSE-onnxruntime.txt
+          $ErrorActionPreference = "Stop"
+          New-Item -ItemType Directory -Force -Path crates/python/python/swiftvec/libs, tmp | Out-Null
+          Invoke-WebRequest -Uri "https://github.com/microsoft/onnxruntime/releases/download/v1.23.0/onnxruntime-win-x64-1.23.0.zip" -OutFile tmp/ort.pkg
+          Expand-Archive -Path tmp/ort.pkg -DestinationPath tmp -Force
+          Copy-Item tmp/onnxruntime-win-x64-1.23.0/lib/onnxruntime.dll crates/python/python/swiftvec/libs/
+          Copy-Item tmp/onnxruntime-win-x64-1.23.0/LICENSE crates/python/python/swiftvec/libs/LICENSE-onnxruntime.txt
       - uses: PyO3/maturin-action@v1
         with:
           command: build

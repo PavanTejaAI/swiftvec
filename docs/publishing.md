@@ -1,4 +1,4 @@
-﻿# Publishing
+# Publishing
 
 Maintainer guide for releasing `swiftvec` (PyPI) and `swiftvec-core` (crates.io). Three paths, in order of preference: tag-driven CI, `tools/publish_pypi.py`, or fully manual maturin/uv commands. Releases are wheels-only, see the note under Automated release.
 

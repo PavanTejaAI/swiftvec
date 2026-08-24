@@ -1,4 +1,4 @@
-﻿# Snapshot format
+# Snapshot format
 
 A snapshot is a single file containing the HNSW index, document ids, metadata, and texts. Everything is little-endian. Databases loaded from snapshots remain mutable.
 

@@ -1,4 +1,4 @@
-﻿# Metadata filters
+# Metadata filters
 
 Filters are evaluated at query time against the metadata stored with each document. The predicate is compiled once per query (invalid operators and malformed expressions fail immediately with a descriptive error), then pushed into graph traversal, nodes that cannot pass the filter are still traversed for connectivity, but only passing nodes are admitted as results.
 
